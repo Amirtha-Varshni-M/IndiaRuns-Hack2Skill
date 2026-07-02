@@ -1,0 +1,837 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Adversarial Candidate Ranking System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: jobs
+    description: Job description management
+  - name: candidates
+    description: Candidate management
+  - name: ranking
+    description: Ranking operations
+  - name: adversary
+    description: Adversary configuration
+  - name: analytics
+    description: Analytics and reporting
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email/password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # JOB DESCRIPTIONS
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List all job descriptions
+      responses:
+        "200":
+          description: List of job descriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobDescription"
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Create a new job description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobInput"
+      responses:
+        "201":
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobDescription"
+
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get job description by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job description
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobDescription"
+    put:
+      operationId: updateJob
+      tags: [jobs]
+      summary: Update job description
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobUpdate"
+      responses:
+        "200":
+          description: Updated job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobDescription"
+    delete:
+      operationId: deleteJob
+      tags: [jobs]
+      summary: Delete job description
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # CANDIDATES
+  /candidates:
+    get:
+      operationId: listCandidates
+      tags: [candidates]
+      summary: List all candidates
+      parameters:
+        - name: jobId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of candidates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Candidate"
+    post:
+      operationId: createCandidate
+      tags: [candidates]
+      summary: Create a candidate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CandidateInput"
+      responses:
+        "201":
+          description: Candidate created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+
+  /candidates/{id}:
+    get:
+      operationId: getCandidate
+      tags: [candidates]
+      summary: Get candidate by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Candidate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+    delete:
+      operationId: deleteCandidate
+      tags: [candidates]
+      summary: Delete candidate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # RANKING
+  /ranking/start:
+    post:
+      operationId: startRanking
+      tags: [ranking]
+      summary: Start a ranking job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RankingStartInput"
+      responses:
+        "201":
+          description: Ranking job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RankingJob"
+
+  /ranking/history:
+    get:
+      operationId: getRankingHistory
+      tags: [ranking]
+      summary: Get ranking history
+      responses:
+        "200":
+          description: Ranking history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RankingJob"
+
+  /ranking/status/{jobId}:
+    get:
+      operationId: getRankingStatus
+      tags: [ranking]
+      summary: Get ranking job status
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ranking job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RankingJob"
+
+  /ranking/results/{jobId}:
+    get:
+      operationId: getRankingResults
+      tags: [ranking]
+      summary: Get complete ranking results
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ranking results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RankingResults"
+
+  # ADVERSARY
+  /adversary/config:
+    get:
+      operationId: getAdversaryConfig
+      tags: [adversary]
+      summary: Get current adversary configuration
+      responses:
+        "200":
+          description: Adversary config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdversaryConfig"
+    post:
+      operationId: updateAdversaryConfig
+      tags: [adversary]
+      summary: Update adversary configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdversaryConfigInput"
+      responses:
+        "200":
+          description: Updated config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdversaryConfig"
+
+  /adversary/perturbation-types:
+    get:
+      operationId: getPerturbationTypes
+      tags: [adversary]
+      summary: Get available perturbation types
+      responses:
+        "200":
+          description: Perturbation types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PerturbationType"
+
+  # ANALYTICS
+  /analytics/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [analytics]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /analytics/trends:
+    get:
+      operationId: getRankingTrends
+      tags: [analytics]
+      summary: Get ranking trends over time
+      responses:
+        "200":
+          description: Ranking trends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrendDataPoint"
+
+  /analytics/manipulation:
+    get:
+      operationId: getManipulationStats
+      tags: [analytics]
+      summary: Get manipulation detection statistics
+      responses:
+        "200":
+          description: Manipulation stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManipulationStats"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    # AUTH
+    RegisterInput:
+      type: object
+      required: [email, password, fullName, company]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        fullName:
+          type: string
+        company:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    User:
+      type: object
+      required: [id, email, fullName, company, role, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        fullName:
+          type: string
+        company:
+          type: string
+        role:
+          type: string
+        createdAt:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    # JOBS
+    JobInput:
+      type: object
+      required: [title, rawText]
+      properties:
+        title:
+          type: string
+        department:
+          type: ["string", "null"]
+        experienceRequired:
+          type: ["integer", "null"]
+        skillsRequired:
+          type: array
+          items:
+            type: string
+        rawText:
+          type: string
+
+    JobUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        department:
+          type: ["string", "null"]
+        experienceRequired:
+          type: ["integer", "null"]
+        skillsRequired:
+          type: array
+          items:
+            type: string
+        rawText:
+          type: string
+
+    JobDescription:
+      type: object
+      required: [id, title, rawText, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        department:
+          type: ["string", "null"]
+        experienceRequired:
+          type: ["integer", "null"]
+        skillsRequired:
+          type: array
+          items:
+            type: string
+        rawText:
+          type: string
+        createdAt:
+          type: string
+
+    # CANDIDATES
+    CandidateInput:
+      type: object
+      required: [name, rawText]
+      properties:
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        experienceYears:
+          type: ["integer", "null"]
+        education:
+          type: ["string", "null"]
+        rawText:
+          type: string
+
+    Candidate:
+      type: object
+      required: [id, name, rawText, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        experienceYears:
+          type: ["integer", "null"]
+        education:
+          type: ["string", "null"]
+        rawText:
+          type: string
+        createdAt:
+          type: string
+
+    # RANKING
+    RankingStartInput:
+      type: object
+      required: [jdId, candidateIds]
+      properties:
+        jdId:
+          type: integer
+        candidateIds:
+          type: array
+          items:
+            type: integer
+
+    RankingJob:
+      type: object
+      required: [id, status, totalCandidates, progress, createdAt]
+      properties:
+        id:
+          type: integer
+        jdId:
+          type: integer
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        progress:
+          type: integer
+        totalCandidates:
+          type: integer
+        jobTitle:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    RankedCandidate:
+      type: object
+      required: [candidateId, name, finalScore, fitScore, robustnessScore, stabilityScore, ranking, isRobust, redFlags, explanation, recommendation]
+      properties:
+        candidateId:
+          type: integer
+        name:
+          type: string
+        finalScore:
+          type: number
+        fitScore:
+          type: number
+        robustnessScore:
+          type: number
+        stabilityScore:
+          type: number
+        ranking:
+          type: integer
+        isRobust:
+          type: boolean
+        manipulationRisk:
+          type: string
+          enum: [low, medium, high]
+        redFlags:
+          type: array
+          items:
+            $ref: "#/components/schemas/RedFlag"
+        skillsMatch:
+          $ref: "#/components/schemas/SkillsMatch"
+        explanation:
+          type: string
+        recommendation:
+          type: string
+          enum: [strong_hire, hire, consider, reject]
+        strengths:
+          type: array
+          items:
+            type: string
+        gaps:
+          type: array
+          items:
+            type: string
+        adversarialTests:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdversarialTest"
+
+    RedFlag:
+      type: object
+      required: [type, severity, details]
+      properties:
+        type:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high]
+        details:
+          type: string
+
+    SkillsMatch:
+      type: object
+      required: [matched, missing, extra]
+      properties:
+        matched:
+          type: array
+          items:
+            type: string
+        missing:
+          type: array
+          items:
+            type: string
+        extra:
+          type: array
+          items:
+            type: string
+
+    AdversarialTest:
+      type: object
+      required: [perturbationType, originalRank, perturbedRank, positionChange]
+      properties:
+        perturbationType:
+          type: string
+        originalRank:
+          type: integer
+        perturbedRank:
+          type: integer
+        positionChange:
+          type: integer
+
+    RankingSummary:
+      type: object
+      required: [totalCandidates, flaggedForManipulation, highlyRobust, averageRobustness, timeTaken]
+      properties:
+        totalCandidates:
+          type: integer
+        flaggedForManipulation:
+          type: integer
+        highlyRobust:
+          type: integer
+        averageRobustness:
+          type: number
+        timeTaken:
+          type: string
+
+    RankingResults:
+      type: object
+      required: [jobId, rankedCandidates, summary]
+      properties:
+        jobId:
+          type: integer
+        rankedCandidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/RankedCandidate"
+        summary:
+          $ref: "#/components/schemas/RankingSummary"
+
+    # ADVERSARY
+    AdversaryConfigInput:
+      type: object
+      properties:
+        numVariants:
+          type: integer
+        intensity:
+          type: string
+          enum: [low, medium, high]
+        enabledPerturbations:
+          type: array
+          items:
+            type: string
+
+    AdversaryConfig:
+      type: object
+      required: [numVariants, intensity, enabledPerturbations]
+      properties:
+        id:
+          type: integer
+        numVariants:
+          type: integer
+        intensity:
+          type: string
+          enum: [low, medium, high]
+        enabledPerturbations:
+          type: array
+          items:
+            type: string
+
+    PerturbationType:
+      type: object
+      required: [key, label, description]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+
+    # ANALYTICS
+    DashboardStats:
+      type: object
+      required: [totalCandidates, totalJobs, totalRankings, flaggedProfiles, highlyRobust, averageScore]
+      properties:
+        totalCandidates:
+          type: integer
+        totalJobs:
+          type: integer
+        totalRankings:
+          type: integer
+        flaggedProfiles:
+          type: integer
+        highlyRobust:
+          type: integer
+        averageScore:
+          type: number
+        recentRankings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RankingJob"
+
+    TrendDataPoint:
+      type: object
+      required: [date, totalRankings, flaggedCount, robustCount, averageScore]
+      properties:
+        date:
+          type: string
+        totalRankings:
+          type: integer
+        flaggedCount:
+          type: integer
+        robustCount:
+          type: integer
+        averageScore:
+          type: number
+
+    ManipulationStats:
+      type: object
+      required: [keywordStuffing, experienceInflation, promptInjection, irrelevantSkills, total]
+      properties:
+        keywordStuffing:
+          type: integer
+        experienceInflation:
+          type: integer
+        promptInjection:
+          type: integer
+        irrelevantSkills:
+          type: integer
+        total:
+          type: integer
